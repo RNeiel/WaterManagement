@@ -8,6 +8,8 @@
 
 import UIKit
 import MapKit
+import Charts
+import Alamofire
 
 class FirstViewController: UIViewController,MKMapViewDelegate {
     
@@ -15,6 +17,10 @@ class FirstViewController: UIViewController,MKMapViewDelegate {
     @IBOutlet weak var allBtn: UIButton!
     @IBOutlet weak var DetailsBtn: UIButton!
     @IBOutlet weak var LocationDetails: UIView!
+    @IBOutlet weak var demSupply: BarChartView!
+    
+    
+    let GLocation = Location.sharedInstance
     
     var selectedLocn = CLLocationCoordinate2D()
     
@@ -34,11 +40,14 @@ class FirstViewController: UIViewController,MKMapViewDelegate {
         
         DetailsBtn.hidden = true
         LocationDetails.hidden = true
+        demSupply.hidden = true
         
         
         mapView.delegate = self
         
-        let Hydet = MKCoordinateRegionMake(CLLocationCoordinate2DMake(17.419865,78.342873),MKCoordinateSpanMake(0.05, 0.05))
+        readLocations()
+        
+        let Hydet = MKCoordinateRegionMake(CLLocationCoordinate2DMake(17.409031,78.481030),MKCoordinateSpanMake(0.45, 0.45))
         
         
         mapView.setRegion(Hydet , animated: true)
@@ -113,8 +122,11 @@ class FirstViewController: UIViewController,MKMapViewDelegate {
             
             selectedLocn = Selectedannotation
             
+            self.GLocation.Position = selectedLocn
+            
             DetailsBtn.hidden = false
             LocationDetails.hidden = false
+            demSupply.hidden = false
             
             mapView.addOverlay(MKCircle(centerCoordinate: Selectedannotation, radius: 1000))
             // mapView.addOverlay(<#T##overlay: MKOverlay##MKOverlay#>)
@@ -156,6 +168,20 @@ class FirstViewController: UIViewController,MKMapViewDelegate {
         let myPolyline = MKPolyline(coordinates: &pointsToUse, count: pointsCount)
         
         mapView.addOverlay(myPolyline)
+    }
+    
+    func readLocations()
+    {
+        Alamofire.request(.GET,"https://honwaterservices.azurewebsites.net/Location").responseJSON
+        {(response)-> Void in
+         
+            
+            if let JSON  = response.result.value{
+                print(JSON)
+            }
+            
+        }
+        
     }
 }
     
