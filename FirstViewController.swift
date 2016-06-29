@@ -11,6 +11,8 @@ import MapKit
 import Charts
 import Alamofire
 
+
+
 class FirstViewController: UIViewController,MKMapViewDelegate {
     
     @IBOutlet weak var mapView: MKMapView!
@@ -19,6 +21,8 @@ class FirstViewController: UIViewController,MKMapViewDelegate {
     @IBOutlet weak var LocationDetails: UIView!
     @IBOutlet weak var demSupply: BarChartView!
     
+    
+    var locationArray = [WaterLocnDetails]()
     
     let GLocation = Location.sharedInstance
     
@@ -48,24 +52,11 @@ class FirstViewController: UIViewController,MKMapViewDelegate {
         readLocations()
         
         let Hydet = MKCoordinateRegionMake(CLLocationCoordinate2DMake(17.409031,78.481030),MKCoordinateSpanMake(0.45, 0.45))
+    
         
         
         mapView.setRegion(Hydet , animated: true)
         
-        var locationsArr = [CLLocationCoordinate2D]()
-        
-        locationsArr.append(CLLocationCoordinate2D(latitude: 17.427252, longitude: 78.342873))
-        locationsArr.append(CLLocationCoordinate2D(latitude: 17.435507, longitude: 78.334345))
-        locationsArr.append(CLLocationCoordinate2D(latitude: 17.446320, longitude: 78.355400))
-        locationsArr.append(CLLocationCoordinate2D(latitude: 17.485407, longitude: 78.315660))
-        
-        for index in locationsArr
-        {
-            let annotation = MKPointAnnotation()
-            annotation.coordinate = index
-            annotation.title = "a"
-            mapView.addAnnotation(annotation)
-        }
         
     }
     
@@ -112,6 +103,8 @@ class FirstViewController: UIViewController,MKMapViewDelegate {
             
             DetailsBtn.hidden = true
             LocationDetails.hidden = true
+            demSupply.hidden = true
+            
             
         }
         
@@ -172,16 +165,93 @@ class FirstViewController: UIViewController,MKMapViewDelegate {
     
     func readLocations()
     {
-        Alamofire.request(.GET,"https://honwaterservices.azurewebsites.net/Location").responseJSON
-        {(response)-> Void in
-         
+        print("trying to get json")
+        
+        
+        Alamofire.request(.GET, "https://honwaterserviceapi.azurewebsites.net/api/Location", parameters: ["foo" : "bar"]) .responseJSON { response in
+    
+            if let JSON = response.result.value {
+                print("JSON: \(JSON)")
             
-            if let JSON  = response.result.value{
-                print(JSON)
+                let id = JSON[0]["LocName"]
+                print(id)
+                let id2 = JSON[1]["LocName"]
+                print(id2)
+                
+                
+                for index in JSON as! [AnyObject]{
+                    
+                    guard let id = index["LocId"] as? Int
+                    else
+                    {
+                    return}
+                    
+                    guard let latitude = index["LocLat"] as? String
+                        else
+                    {
+                        return}
+                    
+                    guard let longitude = index["LocLong"] as? String
+                        else
+                    {
+                        return}
+                    
+                    guard let health = index["LocHealth"] as? Int
+                        else
+                    {
+                        return}
+                    
+                    guard let name = index["LocName"] as? String
+                        else
+                    {
+                        return}
+                    
+
+                    
+                    print(id)
+
+                    let loc = WaterLocnDetails(locID: id,locLong: latitude,locLat: longitude,locHealth: health,locName: name)
+                    self.locationArray.append(loc)
+        
+                    
+                }
+                
+                print(self.locationArray.count)
+                
+                var locationsArr = [CLLocationCoordinate2D]()
+                
+                for Locn in self.locationArray{
+                    print("appending")
+                    print( Double(Locn.locLat)!)
+                    print( Double(Locn.locLong)!)
+                    
+                    locationsArr.append(CLLocationCoordinate2D(latitude: Double(Locn.locLong)!, longitude: Double(Locn.locLat)!))
+                    
+                }
+                
+                
+                locationsArr.append(CLLocationCoordinate2D(latitude: 17.427252, longitude: 78.342873))
+                locationsArr.append(CLLocationCoordinate2D(latitude: 17.435507, longitude: 78.334345))
+                locationsArr.append(CLLocationCoordinate2D(latitude: 17.446320, longitude: 78.355400))
+                locationsArr.append(CLLocationCoordinate2D(latitude: 17.485407, longitude: 78.315660))
+                
+                for index in locationsArr
+                {
+                    let annotation = MKPointAnnotation()
+                    annotation.coordinate = index
+                    annotation.title = "a"
+                    self.mapView.addAnnotation(annotation)
+                }
+
+                
+                
+                
             }
+
+            
             
         }
-        
-    }
+
 }
-    
+
+}
